@@ -1,15 +1,21 @@
-const db = require('./db'); // Or wherever your database connection is established
+const sqlite3 = require('sqlite3').verbose();
+const db = new sqlite3.Database('db.sqlite');
 
-async function seedData() {
-    await db.run(`CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY,
-        name TEXT,
-        email TEXT UNIQUE
-    )`);
-    await db.run('INSERT INTO users (name, email) VALUES (?, ?)', ['Alice Johnson', 'alice@example.com']);
-    await db.run('INSERT INTO users (name, email) VALUES (?, ?)', ['Bob Smith', 'bob@example.com']);
-    // ... more data seeding logic
-}
+db.serialize(() => {
+    db.run("CREATE TABLE conversations (\
+        id STRING PRIMARY KEY, \
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP, \
+        active BOOLEAN NOT NULL DEFAULT 1,\
+        title STRING NOT NULL DEFAULT 'New conversation'\
+        )");
 
-// Call the seed function on server start if desired
-seedData();
+    db.run("CREATE TABLE messages (\
+        id INTEGER PRIMARY KEY, \
+        conversation_id INTEGER, \
+        content TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP, \
+        sender TEXT NOT NULL,\
+        FOREIGN KEY(conversation_id) REFERENCES conversations(id) ) ");
+});
+
+
+db.close();
