@@ -2,8 +2,17 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db.js');
 
+//*
+// * 1. GET /conversations
+// * 2. POST /conversations/send-message
+// * 3. GET /conversations/messages/:conversationId
+// */
+
+// 1. GET /conversations
+// Get all active conversations
 router.get('/', (req, res) => {
     db.all('SELECT * FROM conversations where active = 1', (err, rows) => {
+        console.log('GET /conversations', rows, err)
         if (err) {
             res.status(500).json({ message: err.message });
         } else {
@@ -12,17 +21,21 @@ router.get('/', (req, res) => {
     });
 });
 
+// 2. POST /conversations/send-message
+// Send a message to a conversation
 router.post('/send-message', async (req, res) => {
-    const { coversationId, message } = req.body;
+    const { conversationId, message } = req.body;
 
-    if (!coversationId || !message) {
+    console.log('POST /conversations/send-message', conversationId, message)
+
+    if (!conversationId || !message) {
         res.status(400).json({ message: 'Missing params message' });
         return;
     }
 
     try {
         const existingConversation = await new Promise((resolve, reject) => {
-            db.get('SELECT * FROM conversations WHERE id = ?', [coversationId], (err, row) => {
+            db.get('SELECT * FROM conversations WHERE id = ?', [conversationId], (err, row) => {
                 if (err) reject(err);
                 resolve(row); // Resolve with the row (or undefined if not found)
             });
@@ -33,7 +46,7 @@ router.post('/send-message', async (req, res) => {
             const uniqueId = crypto.randomUUID();
             console.log('Creating new conversation with id', uniqueId, typeof uniqueId);
             await db.run('INSERT INTO conversations (id) VALUES (?)', [uniqueId]);
-            convId = uniqueId
+            c1onvId = uniqueId
         } else {
             convId = existingConversation.id;
         }
@@ -46,8 +59,13 @@ router.post('/send-message', async (req, res) => {
     }
 });
 
+// 3. GET /conversations/messages/:conversationId
+// Get all messages from a conversation
+// TODO: Add pagination
 router.get('/messages/:conversationId', (req, res) => {
     const { conversationId } = req.params;
+
+    console.log('GET /conversations/messages/:conversationId', conversationId)
 
     db.all('SELECT * FROM messages WHERE conversation_id = ?', [conversationId], (err, rows) => {
         if (err) {
