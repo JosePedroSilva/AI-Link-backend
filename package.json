@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "knex": "knex"
   },
   "keywords": [],
   "author": "",
@@ -12,6 +13,7 @@
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^4.18.3",
+    "knex": "^3.1.0",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
