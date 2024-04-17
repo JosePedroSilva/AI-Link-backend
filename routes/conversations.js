@@ -10,13 +10,16 @@ const knex = require('knex')(require('../knexfile'));
 
 // 1. GET /conversations
 // Get all active conversations
-router.get('/', async (req, res) => {
+router.post('/', async (req, res) => {
+    const { user_id } = req.body;
     try {
+        // Fetch all active conversations from the user
         const conversations = await knex('conversations')
             .where('active', 1)
+            .where('user_id', user_id)
             .select();
 
-        console.log('GET /conversations', conversations);
+        console.log('POST /conversations', conversations);
         res.json(conversations);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -27,7 +30,7 @@ router.get('/', async (req, res) => {
 // 2. POST /conversations/send-message
 // Send a message to a conversation
 router.post('/send-message', async (req, res) => {
-    const { conversationId, message } = req.body;
+    const { conversationId, message, user_id } = req.body;
 
     console.log('POST /conversations/send-message', conversationId, message)
 
@@ -46,7 +49,7 @@ router.post('/send-message', async (req, res) => {
         if (!existingConversation) {
             const uniqueId = crypto.randomUUID();
             console.log('Creating new conversation with id', uniqueId, typeof uniqueId);
-            const [insertedId] = await knex('conversations').insert({ id: uniqueId, title: message.substring(0, 10) });
+            const [insertedId] = await knex('conversations').insert({ id: uniqueId, title: message.substring(0, 10), user_id });
             convId = insertedId;
         } else {
             convId = existingConversation.id;
